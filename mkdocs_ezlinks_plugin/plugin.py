@@ -38,7 +38,7 @@ class EzLinksPlugin(BasePlugin):
             self.replacer.add_scanner(WikiLinkScanner())
 
         if self.config["reference_links"]:
-            self.replacer.add_scanner(ReferenceLinkScanner())
+            self.replacer.add_target_scanner(ReferenceLinkScanner())
 
         # Compile the regex once
         self.replacer.compile()

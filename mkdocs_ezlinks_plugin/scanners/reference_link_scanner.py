@@ -33,7 +33,12 @@ class ReferenceLinkScanner(BaseLinkScanner):
 (?:
     (\r\n|\r|\n)?
 )?
-(?P<ref_title>\ ?\"[^(\r\n|\r|\n)\"]*\")?
+(?:
+    \ ?
+    \"
+    (?P<ref_title>[^(\r\n|\r|\n)\"]*)
+    \"
+)?
 """.strip()
 
     def match(self, match: Match) -> bool:
