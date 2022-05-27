@@ -2,19 +2,14 @@ import os
 import re
 from typing import Match
 from urllib.parse import quote
-from .types import EzLinksOptions, BrokenLink
-from .scanners.base_link_scanner import BaseLinkScanner
+
 from .file_mapper import FileMapper
+from .scanners.base_link_scanner import BaseLinkScanner
+from .types import BrokenLink, EzLinksOptions
 
 
 class EzLinksReplacer:
-    def __init__(
-            self,
-            root: str,
-            file_map: FileMapper,
-            use_directory_urls: bool,
-            options: EzLinksOptions,
-            logger):
+    def __init__(self, root: str, file_map: FileMapper, use_directory_urls: bool, options: EzLinksOptions, logger):
         self.root = root
         self.file_map = file_map
         self.use_directory_urls = use_directory_urls
@@ -28,16 +23,16 @@ class EzLinksReplacer:
     def replace(self, path: str, markdown: str) -> str:
         self.path = path
 
-        # Multi-Pattern search pattern, to capture  all link types at once
+        # Multi-Pattern search pattern, to capture all link types at once
         return re.sub(self.regex, self._do_replace, markdown)
 
     # Compiles all scanner patterns as a multi-pattern search, with
     # built in code fence skipping (individual link scanners don't
     # have to worry about them.
     def compile(self):
-        patterns = '|'.join([scanner.pattern() for scanner in self.scanners])
+        patterns = "|".join([scanner.pattern() for scanner in self.scanners])
         self.regex = re.compile(
-            fr'''
+            rf"""
             (?: # Attempt to match a code block
                 [`]{{3}}
                 (?:[\w\W]*?)
@@ -49,7 +44,9 @@ class EzLinksReplacer:
             (?:
                 {patterns}
             )
-            ''', re.X | re.MULTILINE)
+            """,
+            re.X | re.MULTILINE,
+        )
 
     def _do_replace(self, match: Match) -> str:
         abs_from = os.path.dirname(os.path.join(self.root, self.path))
@@ -72,7 +69,7 @@ class EzLinksReplacer:
                         # Otherwise, search for the target through the file map
                         search_result = self.file_map.search(self.path, link.target)
                         if not self.use_directory_urls:
-                            search_result = search_result + '.md' if '.' not in search_result else search_result
+                            search_result = search_result + ".md" if "." not in search_result else search_result
 
                         if not search_result:
                             raise BrokenLink(f"'{link.target}' not found.")

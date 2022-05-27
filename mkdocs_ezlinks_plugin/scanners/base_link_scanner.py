@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
-from typing import Pattern, Match
+from typing import Match
+
 from ..types import Link
 
 

@@ -2,22 +2,17 @@ import os
 from typing import List
 
 import pygtrie
-import mkdocs
+from mkdocs.structure.files import File
 
 from .types import EzLinksOptions
 
 
 class FileMapper:
-    def __init__(
-            self,
-            options: EzLinksOptions,
-            root: str,
-            files: List[mkdocs.structure.pages.Page],
-            logger=None):
+    def __init__(self, options: EzLinksOptions, root: str, files: List[File], logger=None):
         self.options = options
         self.root = root
         self.file_cache = {}
-        self.file_trie = pygtrie.StringTrie(separator='/')
+        self.file_trie = pygtrie.StringTrie(separator="/")
         self.logger = logger
 
         # Drop any files outside of the root of the docs dir
@@ -28,7 +23,7 @@ class FileMapper:
 
     def _store_file(self, file_path):
         # Treat paths as posix format, regardless of OS
-        file_path = file_path.replace('\\', '/')
+        file_path = file_path.replace("\\", "/")
         # Store the pathwise reversed representation of the file with and
         # without file extension.
         search_exprs = [file_path, os.path.splitext(file_path)[0]]
@@ -41,9 +36,9 @@ class FileMapper:
                 self.file_cache[file_name].append(file_path)
 
             # Store in trie
-            components = list(search_expr.split('/'))
+            components = list(search_expr.split("/"))
             components.reverse()
-            self.file_trie['/'.join(components)] = file_path
+            self.file_trie["/".join(components)] = file_path
 
         # Reduce the dictionary to only search terms that are unique
         self.file_cache = {k: v for (k, v) in self.file_cache.items() if len(v) == 1}
@@ -51,7 +46,7 @@ class FileMapper:
     def search(self, from_file: str, file_path: str):
         abs_to = file_path
         # Detect if it's an absolute link, then just return it directly
-        if abs_to.startswith('/'):
+        if abs_to.startswith("/"):
             return os.path.join(self.root, abs_to[1:])
         else:
             # Check if it is a direct link first
@@ -66,7 +61,7 @@ class FileMapper:
             if os.path.basename(file_name) in self.file_cache:
                 abs_to = self.file_cache[file_name][0]
             else:
-                search_for = list(file_path.split('/'))
+                search_for = list(file_path.split("/"))
                 search_for.reverse()
                 search_for = "/".join(search_for)
 
@@ -83,7 +78,7 @@ class FileMapper:
                     # be able to get the result closest to the file doing the linking
                     if has_ambiguity:
                         file_path = os.path.dirname(from_file)
-                        components = file_path.split('/')
+                        components = file_path.split("/")
                         components.reverse()
                         for path_component in components:
                             search_for += f"/{path_component}"
@@ -101,8 +96,10 @@ class FileMapper:
                             active = "<--- (Selected)" if idx == 0 else ""
                             ambiguities += f"  {idx}: {file} {active}\n"
                         log_fn = self.logger.warning if self.options.warn_ambiguities else self.logger.debug
-                        log_fn(f"[EzLink] Link ambiguity detected.\n"
-                               f"File: '{from_file}'\n"
-                               f"Link: '{search_for}'\n"
-                               "Ambiguities:\n" + ambiguities)
+                        log_fn(
+                            f"[EzLink] Link ambiguity detected.\n"
+                            f"File: '{from_file}'\n"
+                            f"Link: '{search_for}'\n"
+                            "Ambiguities:\n" + ambiguities
+                        )
         return os.path.join(self.root, abs_to)
